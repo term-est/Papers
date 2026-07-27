@@ -1,0 +1,29 @@
+<pre class="metadata">
+Title: Extending std::as_bytes
+H1: Extending <code>std::as_bytes</code>
+Shortname: D4328
+Revision: 0
+Status: D
+Group: WG21
+Date: 2026-07-27
+Audience: LEWG
+Editor: Murat Can Çağrı, cancagri.dev@gmail.com
+Editor: İslam Yaşar, islam.yasar@matriksdata.com
+!Paper Number: <a href="https://isocpp.org/papers/form/16000">D4328R0</a>
+Metadata Order: Editor, Paper Number, Project, Audience
+Markup Shorthands: markdown yes, biblio yes, markup yes
+Toggle Diffs: no
+Abstract:
+</pre>
+
+# Revision History # {#revision-history}
+
+# Introduction # {#introduction}
+
+# Motivation # {#motivation}
+
+# Implementation Experience # {#implementation-experience}
+
+# Wording # {#wording}
+
+# References # {#references}

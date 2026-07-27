@@ -1,0 +1,9 @@
+.python/
+.venv/
+/build*/
+__pycache__/
+*.py[cod]
+
+# Local Bikeshed caches and transient files.
+.bikeshed/
+python-install.log
