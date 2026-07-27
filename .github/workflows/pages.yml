@@ -1,0 +1,75 @@
+name: Build and publish papers
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Build papers
+        run: |
+          cmake -S . -B build -DPAPER_DIR=Papers
+          cmake --build build --target papers
+
+      - name: Create paper index
+        shell: python
+        run: |
+          from html import escape
+          from pathlib import Path
+          from urllib.parse import quote
+
+          output = Path("build/generated")
+          papers = sorted(p for p in output.glob("*.html") if p.name != "index.html")
+          links = "\n".join(
+              f'<li><a href="{quote(p.name)}">{escape(p.stem)}</a></li>'
+              for p in papers
+          )
+          (output / "index.html").write_text(
+              f"<!doctype html><meta charset=utf-8>"
+              f"<title>WG21 Papers</title><h1>WG21 Papers</h1><ul>{links}</ul>",
+              encoding="utf-8",
+          )
+
+      - uses: actions/upload-pages-artifact@v4
+        if: github.event_name != 'pull_request'
+        with:
+          path: build/generated
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/configure-pages@v5
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
