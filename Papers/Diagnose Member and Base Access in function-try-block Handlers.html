@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Diagnose member and base access in constructor and destructor function-try-block handlers</title>
+    <style>
+    p {text-align:justify}
+    ins {color:#00A000}
+    [hidden] {display:none !important}
+    .paper-header {display:grid; grid-template-columns:minmax(0,1fr) minmax(0,2fr); align-items:start; gap:1em}
+    .language-controls {grid-column:1; font-size:0.75em; text-align:left}
+    .language-switch {display:flex; justify-content:flex-start; gap:0.8em}
+    .language-switch button {font:inherit; padding:0.2em 0; border:0; background:none; color:#0000ee; text-decoration:underline; cursor:pointer}
+    .language-switch button[aria-pressed="true"] {color:#000; font-weight:bold; text-decoration:none}
+    .language-switch button:focus-visible {outline:2px solid #0000ee; outline-offset:2px}
+    .paper-metadata {grid-column:2; text-align:right; line-height:1.2}
+    .paper-author {display:block; margin-top:0.5em}
+    .paper-title {text-align:center}
+    #translation-status {text-align:left; margin:0.3em 0 0; color:#555}
+    .tony-scroll {overflow-x:auto; margin-inline:2rem}
+    table.tony {border-collapse:collapse; width:100%; min-width:62em}
+    table.tony th, table.tony td {border:1px solid #999; padding:0.75em; vertical-align:top; width:50%}
+    table.tony th {background-color:#E0E0E0; text-align:center}
+    pre {margin:0; font-size:0.85em; line-height:1.4; tab-size:4}
+    pre code {font-family:Consolas,"Liberation Mono",monospace}
+    .comment {color:#444}
+    .changed {font-weight:bold}
+    @page {size:A4; margin:15mm}
+    @media print {
+        .language-switch {display:none}
+        body {font-size:10pt}
+        h1 {font-size:18pt}
+        h2 {font-size:13pt; break-after:avoid}
+        .tony-scroll {overflow:visible}
+        table.tony {width:100%; min-width:0; table-layout:fixed; break-inside:avoid}
+        table.tony th, table.tony td {padding:0.4em}
+        pre {font-size:7pt; line-height:1.3}
+        blockquote {break-inside:avoid}
+    }
+    </style>
+</head>
+<body>
+<header class="paper-header">
+<div class="language-controls" hidden>
+<nav class="language-switch" aria-label="Language">
+  <button type="button" lang="en" aria-pressed="true">English</button>
+  <button type="button" lang="tr" aria-pressed="false" title="non-normative text">Türkçe</button>
+</nav>
+<p id="translation-status" role="status" hidden><span lang="en">Non-normative text</span> / <span lang="tr">Türkçe metin normatif değildir</span></p>
+</div>
+<address class="paper-metadata" lang="en">
+Document number: P4462R0 <a href="https://wg21.link/P4462">[Latest]</a> <a href="https://wg21.link/P4462/status">[Status]</a><br>
+Audience: EWG, CWG
+<span class="paper-author">
+<a href="mailto:cancagri.dev@gmail.com">Murat Can &Ccedil;a&#287;r&#305;</a><br>
+2026-11-09
+</span>
+</address>
+<address class="paper-metadata" lang="tr" hidden>
+Belge numarası: P4462R0 <a href="https://wg21.link/P4462">[Son sürüm]</a> <a href="https://wg21.link/P4462/status">[Durum]</a><br>
+Hedef kitle: EWG, CWG
+<span class="paper-author">
+<a href="mailto:cancagri.dev@gmail.com">Murat Can &Ccedil;a&#287;r&#305;</a><br>
+2026-11-09
+</span>
+</address>
+</header>
+<hr>
+<article id="paper-en" lang="en">
+<h1 class="paper-title">Diagnose member and base access in constructor and destructor function-try-block handlers</h1>
+
+<h2>Abstract</h2>
+
+<div class="tony-scroll">
+<table class="tony" aria-label="The same constructor function-try-block before and after the proposal.">
+<thead>
+<tr><th scope="col">Before (<a href="https://wg21.link/n5054">N5054</a>)</th><th scope="col">After P4462R0</th></tr>
+</thead>
+<tbody>
+<tr>
+<td><pre><code translate="no">struct B {};
+
+struct X : B
+{
+    int m{};
+    inline static int s{};
+
+    void f();
+
+    explicit X(int X::* pm) try
+    {
+        throw 0;
+    }
+    catch (...)
+    {
+        (void)m;                 <span class="changed">// UB</span>
+        (void)this-&gt;m;           <span class="changed">// UB</span>
+        (void)&amp;m;                <span class="changed">// UB</span>
+        f();                     <span class="changed">// UB</span>
+        (void)(this-&gt;*pm);       <span class="changed">// UB</span>
+        B* bp = this;            <span class="changed">// UB</span>
+        B&amp; br = *this;           <span class="changed">// UB</span>
+        [this] { return m; }();  <span class="changed">// UB</span>
+
+        (void)sizeof(m);         <span class="comment">// OK</span>
+        (void)&amp;X::m;             <span class="comment">// OK</span>
+        (void)s;                 <span class="comment">// OK</span>
+        (void)static_cast&lt;void*&gt;(this); <span class="comment">// OK</span>
+
+        X* p = this;             <span class="comment">// OK</span>
+        (void)p-&gt;m;              <span class="comment">// well-formed; UB</span>
+    }
+};</code></pre></td>
+<td><pre><code translate="no">struct B {};
+
+struct X : B
+{
+    int m{};
+    inline static int s{};
+
+    void f();
+
+    explicit X(int X::* pm) try
+    {
+        throw 0;
+    }
+    catch (...)
+    {
+        (void)m;                 <span class="changed">// ill-formed</span>
+        (void)this-&gt;m;           <span class="changed">// ill-formed</span>
+        (void)&amp;m;                <span class="changed">// ill-formed</span>
+        f();                     <span class="changed">// ill-formed</span>
+        (void)(this-&gt;*pm);       <span class="changed">// ill-formed</span>
+        B* bp = this;            <span class="changed">// ill-formed</span>
+        B&amp; br = *this;           <span class="changed">// ill-formed</span>
+        [this] { return m; }();  <span class="changed">// ill-formed</span>
+
+        (void)sizeof(m);         <span class="comment">// OK</span>
+        (void)&amp;X::m;             <span class="comment">// OK</span>
+        (void)s;                 <span class="comment">// OK</span>
+        (void)static_cast&lt;void*&gt;(this); <span class="comment">// OK</span>
+
+        X* p = this;             <span class="comment">// OK</span>
+        (void)p-&gt;m;              <span class="comment">// well-formed; UB</span>
+    }
+};</code></pre></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<p>Direct member and base access in these handlers is undefined behavior. Making it ill-formed is a low-hanging fruit. It catches careless mistakes and replaces UB with compiler diagnostics, which are excellent teachers for beginners.</p>
+
+<h2>Existing Practice</h2>
+
+<p><a href="https://clang.llvm.org/docs/DiagnosticsReference.html#wexceptions">Clang</a> issues a diagnostic, while GCC and MSVC do not.</p>
+
+<h2>Proposed Wording</h2>
+
+<p>Relative to <a href="https://wg21.link/n5054">N5054</a>.</p>
+
+<p>Insert a new paragraph after <a href="https://eel.is/c++draft/except.handle#11">[except.handle]/11</a>:</p>
+
+<blockquote class="proposed-wording" lang="en" translate="no"><ins>A potentially-evaluated expression in such a handler (including in the bodies of nested <i>lambda-expression</i>s) that directly refers to a non-static member or base class subobject of the object, using <code>this</code> explicitly or implicitly, is ill-formed.</ins></blockquote>
+
+
+<p>Alternatively, we can mirror the wording from <a href="https://eel.is/c++draft/expr.prim.id.general#2">[expr.prim.id.general]/2</a>, but I think the proposed wording is clear.</p>
+
+<h2>References</h2>
+
+<p id="ref-n5054"><a href="https://wg21.link/n5054">[N5054]</a> <span lang="en">Working Draft,
+  Programming Languages &mdash; C++</span>, 2026-07-16.</p>
+</article>
+<article id="paper-tr" lang="tr" hidden>
+<h1 class="paper-title">Kurucu ve yıkıcıların function-try-block işleyicilerinde üye ve taban sınıf erişimini tanılama</h1>
+
+<h2>Özet</h2>
+
+<div class="tony-scroll">
+<table class="tony" aria-label="Öneriden önce ve sonra aynı kurucu function-try-block örneği.">
+<thead>
+<tr><th scope="col">Önce (<a href="https://wg21.link/n5054">N5054</a>)</th><th scope="col">P4462R0 sonrası</th></tr>
+</thead>
+<tbody>
+<tr>
+<td><pre><code translate="no">struct B {};
+
+struct X : B
+{
+    int m{};
+    inline static int s{};
+
+    void f();
+
+    explicit X(int X::* pm) try
+    {
+        throw 0;
+    }
+    catch (...)
+    {
+        (void)m;                 <span class="changed">// UB</span>
+        (void)this-&gt;m;           <span class="changed">// UB</span>
+        (void)&amp;m;                <span class="changed">// UB</span>
+        f();                     <span class="changed">// UB</span>
+        (void)(this-&gt;*pm);       <span class="changed">// UB</span>
+        B* bp = this;            <span class="changed">// UB</span>
+        B&amp; br = *this;           <span class="changed">// UB</span>
+        [this] { return m; }();  <span class="changed">// UB</span>
+
+        (void)sizeof(m);         <span class="comment">// OK</span>
+        (void)&amp;X::m;             <span class="comment">// OK</span>
+        (void)s;                 <span class="comment">// OK</span>
+        (void)static_cast&lt;void*&gt;(this); <span class="comment">// OK</span>
+
+        X* p = this;             <span class="comment">// OK</span>
+        (void)p-&gt;m;              <span class="comment">// well-formed; UB</span>
+    }
+};</code></pre></td>
+<td><pre><code translate="no">struct B {};
+
+struct X : B
+{
+    int m{};
+    inline static int s{};
+
+    void f();
+
+    explicit X(int X::* pm) try
+    {
+        throw 0;
+    }
+    catch (...)
+    {
+        (void)m;                 <span class="changed">// ill-formed</span>
+        (void)this-&gt;m;           <span class="changed">// ill-formed</span>
+        (void)&amp;m;                <span class="changed">// ill-formed</span>
+        f();                     <span class="changed">// ill-formed</span>
+        (void)(this-&gt;*pm);       <span class="changed">// ill-formed</span>
+        B* bp = this;            <span class="changed">// ill-formed</span>
+        B&amp; br = *this;           <span class="changed">// ill-formed</span>
+        [this] { return m; }();  <span class="changed">// ill-formed</span>
+
+        (void)sizeof(m);         <span class="comment">// OK</span>
+        (void)&amp;X::m;             <span class="comment">// OK</span>
+        (void)s;                 <span class="comment">// OK</span>
+        (void)static_cast&lt;void*&gt;(this); <span class="comment">// OK</span>
+
+        X* p = this;             <span class="comment">// OK</span>
+        (void)p-&gt;m;              <span class="comment">// well-formed; UB</span>
+    }
+};</code></pre></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<p>Bu işleyicilerde üyelere ve taban sınıflara doğrudan erişim tanımsız davranıştır (UB). Bu tür erişimleri rahatlıkla geçersiz (ill-formed) yapabilir ve dikkatsizlik sonucu oluşabilecek hataları engelleyebiliriz. Ek bir avantaj olarak, bu değişiklikle gelecek derleyici tanıları, yeni yazılımcıların dili öğrenmelerini kolaylaştıracaktır.</p>
+
+<h2>Mevcut Durum</h2>
+
+<p><a href="https://clang.llvm.org/docs/DiagnosticsReference.html#wexceptions">Clang</a> halihazırda tanı verirken GCC ve MSVC tanı vermemektedir.</p>
+
+<h2>Önerilen Düzenleme</h2>
+
+<p><a href="https://wg21.link/n5054">N5054</a> baz alınarak,</p>
+
+<p><a href="https://eel.is/c++draft/except.handle#11">[except.handle]/11</a>’den sonra yeni bir paragraf ekleyin:</p>
+
+<blockquote class="proposed-wording" lang="en" translate="no"><ins>A potentially-evaluated expression in such a handler (including in the bodies of nested <i>lambda-expression</i>s) that directly refers to a non-static member or base class subobject of the object, using <code>this</code> explicitly or implicitly, is ill-formed.</ins></blockquote>
+<blockquote class="wording-translation" lang="tr">Böyle bir işleyicide (iç içe <i>lambda-expression</i> gövdeleri dâhil) yer alan ve <code>this</code> ifadesini açıkça veya örtük olarak kullanarak nesnenin statik olmayan bir üyesine veya taban sınıf alt nesnesine doğrudan atıfta bulunan <i lang="en">potentially evaluated</i> bir ifade geçersizdir (ill-formed).</blockquote>
+
+
+<p>Alternatif olarak, <a href="https://eel.is/c++draft/expr.prim.id.general#2">[expr.prim.id.general]/2</a>’deki ifadeyi örnek alabiliriz, ancak önerilen metnin açık olduğunu düşünüyorum.</p>
+
+<h2>Kaynakça</h2>
+
+<p id="ref-n5054-tr"><a href="https://wg21.link/n5054">[N5054]</a> <span lang="en">Working Draft,
+  Programming Languages &mdash; C++</span>, 2026-07-16.</p>
+</article>
+<script>
+(() => {
+  const versions = [...document.querySelectorAll('article')];
+  const metadata = [...document.querySelectorAll('.paper-metadata')];
+  const controls = document.querySelector('.language-switch');
+  const controlsContainer = document.querySelector('.language-controls');
+  const translationStatus = document.getElementById('translation-status');
+  const buttons = [...controls.querySelectorAll('button')];
+
+  function fragmentTarget() {
+    try {
+      return document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    } catch {
+      return null;
+    }
+  }
+
+  function selectLanguage(language, updateUrl = false) {
+    const selected = versions.find(version => version.lang === language) || versions[0];
+    for (const version of versions) version.hidden = version !== selected;
+    for (const details of metadata) details.hidden = details.lang !== selected.lang;
+    document.documentElement.lang = selected.lang;
+    document.title = selected.querySelector('h1').textContent;
+    translationStatus.hidden = selected.lang === 'en';
+    controls.setAttribute('aria-label', selected.lang === 'tr' ? 'Dil' : 'Language');
+    for (const button of buttons) {
+      button.setAttribute('aria-pressed', String(button.lang === selected.lang));
+    }
+    if (updateUrl) {
+      const url = new URL(location.href);
+      url.searchParams.set('lang', selected.lang);
+      const target = fragmentTarget();
+      if (target && target.closest('article') !== selected) url.hash = '';
+      try { history.replaceState(null, '', url); } catch {}
+    }
+  }
+
+  for (const button of buttons) {
+    button.addEventListener('click', () => selectLanguage(button.lang, true));
+  }
+  const fragmentVersion = fragmentTarget()?.closest('article')?.lang;
+  selectLanguage(fragmentVersion || new URL(location.href).searchParams.get('lang'));
+  controlsContainer.hidden = false;
+  addEventListener('hashchange', () => {
+    const target = fragmentTarget();
+    const language = target?.closest('article')?.lang;
+    if (language) {
+      selectLanguage(language, true);
+      target.scrollIntoView();
+    }
+  });
+})();
+</script>
+</body>
+</html>
