@@ -26,6 +26,11 @@ jobs:
           cmake -S . -B build -DPAPER_DIR=Papers
           cmake --build build --target papers
 
+      - name: Copy HTML papers
+        run: |
+          find Papers -maxdepth 1 -type f -name '*.html' \
+            -exec cp -t build/generated -- {} +
+
       - name: Create paper index
         shell: python
         run: |
