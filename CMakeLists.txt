@@ -48,7 +48,8 @@ foreach(source IN LISTS papers)
     )
 
     list(APPEND outputs "${output}")
-    add_custom_target("paper-${name}" DEPENDS "${output}")
+    string(REPLACE " " "_" target_name "${name}")
+    add_custom_target("paper-${target_name}" DEPENDS "${output}")
 endforeach()
 
 add_custom_target(papers ALL DEPENDS ${outputs})
