@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!-- saved from url=(0044)https://isocpp.org/files/papers/D4378R0.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+	<title>Align exact-width integer types with C23</title>
+
+	<style>
+	p {text-align:justify}
+	li {text-align:justify}
+	blockquote.note
+	{
+		background-color:#E0E0E0;
+		padding-left: 15px;
+		padding-right: 15px;
+		padding-top: 1px;
+		padding-bottom: 1px;
+	}
+	ins {color:#00A000}
+	del {color:#A00000}
+	</style>
+</head>
+<body>
+<address align="right">
+Document number: P4378R0<br>
+Audience: SG22, LEWG, LWG<br>
+<br>
+<br>
+<a href="mailto:cancagri.dev@gmail.com">Murat Can Ça&#287;r&#305;</a><br>
+2026-09-15<br>
+</address>
+<hr>
+<h1 align="center">Align exact-width integer types with C23</h1>
+
+<h2>Abstract</h2>
+
+<p>C23 requires the exact-width typedef names for every width for which an
+  implementation provides a standard or extended integer type with no padding
+  bits. C++ retains this requirement only for widths 8, 16, 32, and 64. This
+  paper aligns C++ with C23.</p>
+
+<h2>Discussion</h2>
+
+<p>C23 removed the <code>intmax_t</code>/<code>uintmax_t</code> ABI obstacle
+  to wider extended integer types through
+  <a href="https://www.open-std.org/jtc1/sc22/wg14/www/docs/n2888.htm">N2888</a>.
+  C++ adopted the corresponding relaxation for C++23 in
+  <a href="https://cplusplus.github.io/LWG/issue3828">LWG 3828</a>.
+  These greatest-width types are no longer required to cover extended integer
+  types wider than <code>long long</code> and <code>unsigned long long</code>,
+  respectively.</p>
+
+<h2>Wording</h2>
+
+<p>Modify <a href="https://eel.is/c++draft/cstdint.syn#3">[cstdint.syn]/3</a>
+  with the following changes:</p>
+
+<blockquote><del>All types that use the placeholder <em>N</em> are optional
+  when <em>N</em> is not 8, 16, 32, or 64.</del>
+  <del>The exact-width types <code>int<em>N</em>_t</code> and
+  <code>uint<em>N</em>_t</code> for <em>N</em> = 8, 16, 32, and 64 are also
+  optional; however, if</del> <ins>If</ins> an implementation
+  <del>defines integer types with the corresponding</del>
+  <ins>provides standard or extended integer types with a particular</ins>
+  width <ins><em>N</em></ins> and no padding bits, it declares the corresponding
+  typedef-names.
+  Each of the macros listed in this subclause is defined if and only if the
+  implementation declares the corresponding typedef-name.
+  [Note 1: The macros <code>INT<em>N</em>_C</code> and
+  <code>UINT<em>N</em>_C</code> correspond to the typedef-names
+  <code>int_least<em>N</em>_t</code> and <code>uint_least<em>N</em>_t</code>,
+  respectively. — end note]</blockquote>
+
+<p>All wording is relative to <a href="https://wg21.link/n5054">N5054</a>.</p>
+
+<h2>References</h2>
+
+<p><a href="https://wg21.link/n5054">[N5054]</a> Working Draft,
+  Programming Languages — C++, 2026-07-16.</p>
+
+<p><a href="https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3220.pdf">[ISO/IEC 9899:2024]</a>
+  Programming Languages — C, 7.22.1.1 paragraph 3 (N3220, page 317).</p>
+
+<p><a href="https://www.open-std.org/jtc1/sc22/wg14/www/docs/n2888.htm#publish">[N2888]</a>
+  Jens Gustedt, <cite>Require exact-width integer type interfaces</cite>,
+  adopted change in 7.20.1.1 paragraph 3, 2021-12-01.</p>
+
+
+</body></html>
