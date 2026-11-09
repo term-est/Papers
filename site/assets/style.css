@@ -1,0 +1,63 @@
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 58px 20px;
+  min-height: 100vh;
+  color: #812162;
+  background: #ffcce8 url("sparkles.svg") repeat;
+  font: 15px/1.6 "Comic Sans MS", "Comic Sans", cursive;
+}
+::selection { background: #ff3baa; color: white; }
+main {
+  position: relative;
+  max-width: 680px;
+  margin: 0 auto;
+  border: 5px ridge #ff86c9;
+  background: #fff0fa;
+  box-shadow: 7px 7px 0 #e48ac5;
+}
+.glitter-bar {
+  overflow: hidden;
+  padding: 3px 8px;
+  text-align: center;
+  white-space: nowrap;
+  color: white;
+  text-shadow: 1px 1px #a62282;
+  background: repeating-linear-gradient(135deg, #ff70bd 0 3px, #ed49a4 3px 5px, #fa97d5 5px 7px);
+  border-bottom: 1px solid #cb3b91;
+  letter-spacing: 4px;
+  font-size: 13px;
+}
+.glitter-bar:last-child { border-top: 1px solid #cb3b91; border-bottom: 0; }
+.contents { padding: 22px 30px 15px; }
+.kaomoji { text-align: center; color: #c63a99; font-size: 24px; }
+h1 {
+  margin: 12px auto 10px;
+  max-width: 570px;
+  color: #ef258f;
+  font: bold clamp(24px, 5.5vw, 36px)/1.2 "Comic Sans MS", "Comic Sans", cursive;
+  text-align: center;
+  text-shadow: 2px 2px white, 3px 3px #b6409b;
+}
+.tagline { margin: 16px 0 22px; text-align: center; color: #862269; font-size: 13px; }
+.divider { overflow: hidden; text-align: center; white-space: nowrap; color: #e349aa; font-size: 15px; }
+.paper-list { margin: 26px 0; padding-left: 24px; list-style-type: "♡  "; }
+.paper-list li { margin: 0 0 20px; padding-left: 5px; }
+.paper-list li:last-child { margin-bottom: 0; }
+.paper-list li::marker { color: #e62091; }
+.paper-link { color: #8825b2; text-decoration: underline; text-underline-offset: 2px; }
+.paper-link:visited { color: #b03283; }
+.paper-link:hover { background: #ffc7e7; color: #ca005f; text-decoration-style: wavy; }
+.paper-link:focus-visible { outline: 2px dashed #c90074; outline-offset: 4px; }
+.paper-id { font-weight: bold; }
+.signoff { overflow: hidden; margin-top: 24px; text-align: center; white-space: nowrap; color: #b73489; font-size: 12px; }
+@media (max-width: 480px) {
+  body { padding: 28px 14px; }
+  .contents { padding: 20px 17px 14px; }
+  .paper-list { font-size: 14px; padding-left: 20px; }
+  .tagline { font-size: 12px; }
+}
+.anime { display: block; margin: -8px auto 14px; }
+.cursor-star { position: fixed; z-index: 10; pointer-events: none; color: #f02a9c; text-shadow: 0 0 3px white; font: 22px serif; animation: fall .7s ease-out forwards; }
+@keyframes fall { from { opacity: 1; transform: translate(-50%, -50%) scale(1); } to { opacity: 0; transform: translate(-50%, 28px) rotate(100deg) scale(.2); } }

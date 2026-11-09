@@ -31,24 +31,8 @@ jobs:
           find Papers -maxdepth 1 -type f -name '*.html' \
             -exec cp -t build/generated -- {} +
 
-      - name: Create paper index
-        shell: python
-        run: |
-          from html import escape
-          from pathlib import Path
-          from urllib.parse import quote
-
-          output = Path("build/generated")
-          papers = sorted(p for p in output.glob("*.html") if p.name != "index.html")
-          links = "\n".join(
-              f'<li><a href="{quote(p.name)}">{escape(p.stem)}</a></li>'
-              for p in papers
-          )
-          (output / "index.html").write_text(
-              f"<!doctype html><meta charset=utf-8>"
-              f"<title>WG21 Papers</title><h1>WG21 Papers</h1><ul>{links}</ul>",
-              encoding="utf-8",
-          )
+      - name: Build paper site
+        run: python scripts/build_site.py build/generated
 
       - uses: actions/upload-pages-artifact@v4
         if: github.event_name != 'pull_request'
